@@ -9,14 +9,14 @@ nextflow.enable.dsl = 2
 params.rundir = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/OUTPUT" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
 params.mitodir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn" // The output parent directory
 
-params.fastq = "${params.rundir}/OG33/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
+params.fastq="$params.rundir/{OG33,OG89,OG825}/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
 params.getorg_db = "/scratch/pawsey0812/tpeirce/.GetOrganelle"
 params.organelle_type = "animal_mt"
 params.lca = "/scratch/pawsey0812/pbayer/OceanGenomes.CuratedNT.NBDLTranche1.CuratedBOLD.fasta" // The curated OG database, curated by Philipp
-params.taxdb = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/Mitogenome_nextflow/blast_database/*" // The directory that you have "wget ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz" and then "tar xzvf taxdb.tar.gz"
-params.taxonkit="/scratch/pawsey0812/tpeirce/" // The direcotry that you have "wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" and then "tar xzvf taxdump.tar.gz"
-params.EMMA = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/Mitogenome_nextflow/OG33.ilmn.240716.getorg1770.animal_mt.K115.complete.graph1.1.path_sequence.fasta" // For test running Emma process
-params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params is to be used when you dont need to do the assembly
+params.taxdb = "/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/*" // The directory that you have "wget ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz" and then "tar xzvf taxdb.tar.gz"
+params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The direcotry that you have "wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" and then "tar xzvf taxdump.tar.gz"
+params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/{OG33,OG89,OG825}/*/mtdna/OG*.ilmn.240716.getorg1770.fasta" // For test running Emma process
+//params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params is to be used when you dont need to do the assembly
 //_________________________________________________________________________________________________________
 // |||| Processes ||||
 //_________________________________________________________________________________________________________
@@ -29,14 +29,15 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
         tag "GetOrganelle on $og_num"
         label 'process_high'
 
-        publishDir "${params.mitodir}/${og_num}/${sample}.getorg1770/mtdna", mode:'copy'
+        publishDir "${params.mitodir}/${og_num}/${sample}.getorg1770", mode:'copy'
 
         input:
             tuple val(og_num), val(sample), path(fastq) // sample should be $OG.$TECH.$DATE
-            tuple val(organelle_type), path(db)  // getOrganelle has a database and config file
+            path(db)  // getOrganelle has a database and config file
+            val(organelle_type)
 
         output:
-            path("mtdna/*1.1*.fasta"),  emit: fasta
+            path("mtdna/${sample}.getorg1770.fasta"),  emit: fasta
             path("mtdna/*"),            emit: etc // the rest of the result files
             
 
@@ -59,6 +60,8 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
                 -2 ${fastq[1]} \\
                 -o mtdna
 
+            wait
+            
             mv mtdna/${prefix}.*1.1.*.fasta mtdna/${prefix}.fasta
             sed -i "/^>/s/.*/>${prefix}/g" mtdna/${prefix}.fasta
 
@@ -82,8 +85,8 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
     process EMMA { 
         tag "EMMA annotation on $og_num"
 
-        // publishDir  // No publish dir from this step, it will be published after lca calculation
-
+        publishDir "${params.mitodir}/${og_num}/${prefix}", mode:'copy'
+        
         input:
 
             tuple val(og_num), val(prefix), path(fasta)
@@ -102,7 +105,7 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
                      
             emma_prefix="${prefix}.emma"\${emma_version}""
             
-            mkdir -p tempdir cds proteins emma
+            mkdir -p tempdir cds emma
             
             /opt/julia-1.10.5/bin/julia \\
                 /opt/Emma/src/command.jl \\
@@ -112,6 +115,7 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
                 --tbl emma/\${emma_prefix}.tbl \\
                 --svg emma/\${emma_prefix}.svg \\
                 --tempdir tempdir/ \\
+                --loglevel debug \\
                 ${fasta} 
             
             /opt/julia-1.10.5/bin/julia /opt/extract_proteins.jl \\
@@ -151,7 +155,7 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
     process BLAST { 
         tag "BLAST on $og_num"
 
-    // publishDir  // No publish dir from this step, it will be published after lca calculation
+        publishDir "${params.mitodir}/${og_num}/${prefix}", mode:'copy'
 
         input:
             tuple val(og_num), val(prefix), val(emma_prefix), path(emma)
@@ -159,12 +163,12 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
         
 
         output:
-            tuple val(og_num), val(prefix), val(emma_prefix), path("lca"), path(emma)
+            tuple val(og_num), val(prefix), val(emma_prefix), path("lca")
 
         script:
             """ 
             version=\$(blastn -version)
-            cds=${emma}/cds
+            cds=emma/cds
             mkdir -p lca
 
             blastn \\
@@ -216,15 +220,15 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
     process LCA { 
         tag "LCA on $og_num"
 
-        publishDir  "${params.mitodir}/${og_num}/${prefix}", mode:'copy'
+        publishDir "${params.mitodir}/${og_num}/${prefix}", mode:'copy'
 
         input:
-            tuple val(og_num), val(prefix), val(emma_prefix), path("lca"), path(emma)
+            tuple val(og_num), val(prefix), val(emma_prefix), path(lca)
         
 
         output:        
             path("lca")
-            path(emma)
+            
 
         script:
             """ 
@@ -261,46 +265,53 @@ params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params i
 
 workflow {
 
-    read_pairs_ch = Channel
-        .fromFilePairs(params.fastq, checkIfExists: true)
-        .map { 
-            def og_num = it[0].tokenize('.').take(1)
-            def sample = it[0].tokenize('.').take(3).join('.')
-            return tuple(og_num, sample, it[1]) 
-        }
-
-    getorg_ch = Channel.of(tuple(params.organelle_type, params.getorg_db))
-
-
-    GETORGANELLE_FROMREADS(read_pairs_ch, getorg_ch)
+//    read_pairs_ch = Channel
+//        .fromFilePairs(params.fastq, checkIfExists: true)
+//        .map { pair ->
+//            def tokens = pair[0].tokenize('.')
+//            def og_num = tokens[0]              // Get the first token (og_num)
+//            def sample = tokens.take(3).join('.') // Join the first 3 tokens to form the sample name
+//            return tuple(og_num, sample, pair[1]) 
+//        }
+//    read_pairs_ch.subscribe { item -> println "read_pairs_ch: $item"}
     
-    prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
-        .map {
+//    getorg_db_ch = params.getorg_db
+//    organelle_ch = params.organelle_type
+
+
+//    GETORGANELLE_FROMREADS(read_pairs_ch, getorg_db_ch, organelle_ch)
+    
+//    prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
+//        .map {
             // Use the baseName method to extract the filename without the directo
-            def fileName = it.getFileName().toString()
+//            def fileName = it.getFileName().toString()
             // Extract the first token (e.g., "OG33")
-            def og_num = fileName.tokenize('.').take(1)
+//            def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
             // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
-            def prefix = fileName.tokenize('.').take(4).join('.')
-            return tuple(og_num, prefix, it) 
-        }
-    prefix_ch.subscribe { item -> println "prefix_ch: $item"}
+//            def prefix = fileName.tokenize('.').take(4).join('.')
+//            return tuple(og_num, prefix, it) 
+//        }
+//    prefix_ch.subscribe { item -> println "prefix_ch: $item"}
     
-    EMMA(prefix_ch)
+//    EMMA(prefix_ch)
 
 
 
     //Remove this block of code if everything works and no more testing needed
-//    emma_ch = Channel
-//        .fromPath(params.EMMA, checkIfExists: true)
-//        .map {
-//            def og_num = "OG33"
-//            def prefix = "OG33.ilmn.240716.getorg1770"
-//            return tuple(og_num, prefix, params.EMMA)
-//        }   
-//    emma_ch.subscribe { item -> println "emma_ch: $item"}
+    emma_ch = Channel
+        .fromPath(params.EMMA, checkIfExists: true)
+        .map {
+            // Use the baseName method to extract the filename without the directo
+            def fileName = it.getFileName().toString()
+            // Extract the first token (e.g., "OG33")
+            def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
+            // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
+            def prefix = fileName.tokenize('.').take(4).join('.')
+            return tuple(og_num, prefix, it) 
+        }   
+    emma_ch.subscribe { item -> println "emma_ch: $item"}
     
-//    EMMA(emma_ch)
+    EMMA(emma_ch)
 
     EMMA.out.subscribe { item -> println "Output from EMMA: $item" }
     
