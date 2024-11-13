@@ -6,6 +6,9 @@ This pipeline can be run by submitting the 01_slurm.sh, or run in the workflow n
 
 Make sure to update the params at the start of the nextflow to match your directory sturctures.
 
+**Running only the annotation and LCA*
+This pipeline can also be altered to just run the annotation and LCA. The params.EMMA needs to be changed to the path of the mitogenomes and in the workflow you need to comment out the first part, there are instructions in the nextflow script.
+
 **Getorganelle**
 The first process uses GetOrgnanelle to assemble the mitogenome using filtered and trimmed reads. The resulting mitogenome will be output as ${sample}.getorg1770.fasta.
 

@@ -265,56 +265,70 @@ params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.geto
 
 workflow {
 
-    read_pairs_ch = Channel
-        .fromFilePairs(params.fastq, checkIfExists: true)
-        .map { pair ->
-            def tokens = pair[0].tokenize('.')
-            def og_num = tokens[0]              // Get the first token (og_num)
-            def sample = tokens.take(3).join('.') // Join the first 3 tokens to form the sample name
-            return tuple(og_num, sample, pair[1]) 
-        }
-    read_pairs_ch.subscribe { item -> println "read_pairs_ch: $item"}
+    //_________________________________________________________________________________________________________________
+    // This is the section for running the whole pipeline, starting with using get organelle to assemble the mitogenome.
+    // Comment this section out to the solid lines if you just want to run the annotation and LCA.
+    //_________________________________________________________________________________________________________________
+
+        read_pairs_ch = Channel
+            .fromFilePairs(params.fastq, checkIfExists: true)
+            .map { pair ->
+                def tokens = pair[0].tokenize('.')
+                def og_num = tokens[0]              // Get the first token (og_num)
+                def sample = tokens.take(3).join('.') // Join the first 3 tokens to form the sample name
+                return tuple(og_num, sample, pair[1]) 
+            }
+        read_pairs_ch.subscribe { item -> println "read_pairs_ch: $item"}
+        
+        getorg_db_ch = params.getorg_db
+        organelle_ch = params.organelle_type
+
+
+        GETORGANELLE_FROMREADS(read_pairs_ch, getorg_db_ch, organelle_ch)
+        
+        prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
+            .map {
+                // Use the baseName method to extract the filename without the directo
+                def fileName = it.getFileName().toString()
+                // Extract the first token (e.g., "OG33")
+                def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
+                // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
+                def prefix = fileName.tokenize('.').take(4).join('.')
+                return tuple(og_num, prefix, it) 
+            }
+        prefix_ch.subscribe { item -> println "prefix_ch: $item"}
+        
+        EMMA(prefix_ch)
+
+    //_________________________________________________________________________________________________________________
+    // Comment out to here to just run the annotation and LCA.
+    // The next section needs to be un commented to run the annotation and LCA.
+    // The next section needs to be commented out to run the whole pipeline. Until the next solid line
+    //_________________________________________________________________________________________________________________
+
+        //Comment out everything above to just run the nextflow from EMMA and unclomment out this section
+    //    emma_ch = Channel
+    //        .fromPath(params.EMMA, checkIfExists: true)
+    //        .map {
+                // Use the baseName method to extract the filename without the directo
+    //            def fileName = it.getFileName().toString()
+                // Extract the first token (e.g., "OG33")
+    //            def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
+                // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
+    //            def prefix = fileName.tokenize('.').take(4).join('.')
+    //            return tuple(og_num, prefix, it) 
+    //        }   
+        //emma_ch.subscribe { item -> println "emma_ch: $item"}  // Uncomment if you want to check the channel output
+        
+    //    EMMA(emma_ch)
+
+        //EMMA.out.subscribe { item -> println "Output from EMMA: $item" } // Uncomment if you want to check the channel output
     
-    getorg_db_ch = params.getorg_db
-    organelle_ch = params.organelle_type
-
-
-    GETORGANELLE_FROMREADS(read_pairs_ch, getorg_db_ch, organelle_ch)
+    //_________________________________________________________________________________________________________________
+    // This remaining section remains uncommented for either workflow.
+    //_________________________________________________________________________________________________________________
     
-    prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
-        .map {
-            // Use the baseName method to extract the filename without the directo
-            def fileName = it.getFileName().toString()
-            // Extract the first token (e.g., "OG33")
-            def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
-            // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
-            def prefix = fileName.tokenize('.').take(4).join('.')
-            return tuple(og_num, prefix, it) 
-        }
-    prefix_ch.subscribe { item -> println "prefix_ch: $item"}
-    
-    EMMA(prefix_ch)
 
-
-
-    //Comment out everything above to just run the nextflow from EMMA and unclomment out this section
-//    emma_ch = Channel
-//        .fromPath(params.EMMA, checkIfExists: true)
-//        .map {
-            // Use the baseName method to extract the filename without the directo
-//            def fileName = it.getFileName().toString()
-            // Extract the first token (e.g., "OG33")
-//            def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
-            // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
-//            def prefix = fileName.tokenize('.').take(4).join('.')
-//            return tuple(og_num, prefix, it) 
-        }   
-    //emma_ch.subscribe { item -> println "emma_ch: $item"}  // Uncomment if you want to check the channel output
-    
-//    EMMA(emma_ch)
-
-    //EMMA.out.subscribe { item -> println "Output from EMMA: $item" } // Uncomment if you want to check the channel output
-    
     emma_prefix_ch = EMMA.out
         .map { 
             og_num, prefix, emma_prefix, emma -> 
