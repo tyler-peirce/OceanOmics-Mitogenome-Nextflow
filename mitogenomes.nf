@@ -6,21 +6,56 @@ nextflow.enable.dsl = 2
 // |||| Pipeline input parameters ||||
 //_________________________________________________________________________________________________________
 
-params.rundir = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/OUTPUT" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
+params.rundir = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/OUTPUT_NOVA_241108_AMD" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
 params.mitodir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn" // The output parent directory
 
 params.fastq="$params.rundir/OG*/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
-params.getorg_db = "/scratch/pawsey0812/tpeirce/.GetOrganelle"
+//params.getorg_db = "/scratch/pawsey0812/tpeirce/.GetOrganelle" // this is now redundant because of the new process, delete if it works fine.
 params.organelle_type = "animal_mt"
 params.lca = "/scratch/pawsey0812/pbayer/OceanGenomes.CuratedNT.NBDLTranche1.CuratedBOLD.fasta" // The curated OG database, curated by Philipp
 params.taxdb = "/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/*" // The directory that you have "wget ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz" and then "tar xzvf taxdb.tar.gz"
 params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The direcotry that you have "wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" and then "tar xzvf taxdump.tar.gz"
-params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.getorg1770.fasta" // For test running Emma process
+//params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ACACIA/OG*/OG*/mtdna/OG*.fasta" // For test running Emma process
 //params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params is to be used when you dont need to do the assembly
 //_________________________________________________________________________________________________________
 // |||| Processes ||||
 //_________________________________________________________________________________________________________
 
+    //_________________________________________________________________________________________________________
+    // GetOrganelle - Extracting the mitogenome from fasta files
+    //_________________________________________________________________________________________________________
+
+    process GETORGANELLE_CONFIG {
+        tag "${organelle_type}"
+        label 'process_single'
+
+        input:
+        val(organelle_type)
+
+        output:
+        tuple val(organelle_type), path("getorganelle"), emit: db
+        path "versions.yml"                            , emit: versions
+
+        when:
+        task.ext.when == null || task.ext.when
+
+        script:
+        def args = task.ext.args ?: ''
+        """
+        get_organelle_config.py \\
+            $args \\
+            -a ${organelle_type} \\
+            --config-dir getorganelle
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            getorganelle: \$(get_organelle_config.py --version | sed 's/^GetOrganelle v//g')
+        END_VERSIONS
+        """
+
+    }
+    
+    
     //_________________________________________________________________________________________________________
     // GetOrganelle - Extracting the mitogenome from fasta files
     //_________________________________________________________________________________________________________
@@ -33,8 +68,7 @@ params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.geto
 
         input:
             tuple val(og_num), val(sample), path(fastq) // sample should be $OG.$TECH.$DATE
-            path(db)  // getOrganelle has a database and config file
-            val(organelle_type)
+            tuple val(organelle_type), path(db)  // getOrganelle has a database and config file
 
         output:
             path("mtdna/${sample}.getorg1770.fasta"),  emit: fasta
@@ -93,7 +127,8 @@ params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.geto
             
 
         output:
-            tuple val(og_num), val(prefix), path("emma_prefix.txt"), path("emma"), emit: lca
+            tuple val(og_num), val(prefix), path("emma_prefix.txt"), path("emma"), emit: blast
+            path "emma/versions_emma.yml"
           
             
         script:
@@ -122,20 +157,15 @@ params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.geto
                 emma/ \\
                 emma/
             
-            mv cds proteins emma/  
+            mv cds emma/  
 
-            # Add in the sample to the file names in cds and proteins
+            # Add in the sample to the file names in cds
             for file in emma/cds/*; do
                 new_file="\${file%.fa}.\${emma_prefix}.fa"     
                 mv "\$file" "\$new_file"
             done
-
-            for file in emma/proteins/*; do
-                new_file="\${file%.fa}.\${emma_prefix}.fa"     
-                mv "\$file" "\$new_file"
-            done
                        
-            cat <<-END_VERSIONS > emma/versions.yml
+            cat <<-END_VERSIONS > emma/versions_emma.yml
             "${task.process}":
                 julia: \$(julia -v | sed 's/^julia version //g' )
                 emma: \$(cat /opt/Emma/Project.toml | grep version)
@@ -163,7 +193,8 @@ params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.geto
         
 
         output:
-            tuple val(og_num), val(prefix), val(emma_prefix), path("lca")
+            tuple val(og_num), val(prefix), val(emma_prefix), path("lca"), emit: lca
+            path "lca/versions_BLAST.yml"
 
         script:
             """ 
@@ -249,6 +280,10 @@ params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/OG*/*/mtdna/OG*.geto
                 > lca/lca.12s.${emma_prefix}.tsv
             
             sed -i "s/\$/\\t\$(date +%y%m%d)/" lca/lca.*.tsv
+            wait
+            sed -i "s/\$/\\tCO1/" lca/lca.12s*.tsv
+            sed -i "s/\$/\\t16s/" lca/lca.12s*.tsv
+            sed -i "s/\$/\\t12s/" lca/lca.12s*.tsv
 
             cat <<-END_VERSIONS > lca/versions_LCA.yml
             "${task.process}":
@@ -270,6 +305,10 @@ workflow {
     // Comment this section out to the solid lines if you just want to run the annotation and LCA.
     //_________________________________________________________________________________________________________________
 
+        organelle_ch = params.organelle_type
+
+        GETORGANELLE_CONFIG(organelle_ch)
+                
         read_pairs_ch = Channel
             .fromFilePairs(params.fastq, checkIfExists: true)
             .map { pair ->
@@ -280,11 +319,8 @@ workflow {
             }
         read_pairs_ch.subscribe { item -> println "read_pairs_ch: $item"}
         
-        getorg_db_ch = params.getorg_db
-        organelle_ch = params.organelle_type
 
-
-        GETORGANELLE_FROMREADS(read_pairs_ch, getorg_db_ch, organelle_ch)
+        GETORGANELLE_FROMREADS(read_pairs_ch, GETORGANELLE_CONFIG.out.db)
         
         prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
             .map {
@@ -322,14 +358,14 @@ workflow {
         
     //    EMMA(emma_ch)
 
-        //EMMA.out.subscribe { item -> println "Output from EMMA: $item" } // Uncomment if you want to check the channel output
+        //EMMA.out.blast.subscribe { item -> println "Output from EMMA: $item" } // Uncomment if you want to check the channel output
     
     //_________________________________________________________________________________________________________________
     // This remaining section remains uncommented for either workflow.
     //_________________________________________________________________________________________________________________
     
 
-    emma_prefix_ch = EMMA.out
+    emma_prefix_ch = EMMA.out.blast
         .map { 
             og_num, prefix, emma_prefix, emma -> 
             def new_emma_prefix = file(emma_prefix).text.trim()
@@ -342,7 +378,7 @@ workflow {
         .fromPath(params.taxdb, checkIfExists: true)
         
     BLAST(emma_prefix_ch, taxdb_ch.collect())
-    LCA(BLAST.out)
+    LCA(BLAST.out.lca)
     
 
 }

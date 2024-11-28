@@ -11,5 +11,5 @@
 #SBATCH --output=%x-%j.out #SBATCH --error=%x-%j.err
 
 
-DIR=/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn
-rclone move $DIR/ pawsey0812:oceanomics-mitogenomes --checksum --progress
+#rclone move /scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/ pawsey0812:oceanomics-mitogenomes --checksum --progress
+rclone copy /scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn/ pawsey0812:oceanomics-mitogenomes --checksum --progress
