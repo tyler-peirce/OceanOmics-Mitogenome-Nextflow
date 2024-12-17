@@ -3,7 +3,7 @@
 USER=tpeirce
 RUNDIR=/scratch/pawsey0812/$USER/MITOGENOMES/ilmn
 
-for DIR in $RUNDIR/OG*/OG*; do
+for DIR in $RUNDIR/OG115/OG*; do
   echo "$DIR"
   rm $DIR/emma_prefix.txt
   rm -r $DIR/mtdna/*extended_spades

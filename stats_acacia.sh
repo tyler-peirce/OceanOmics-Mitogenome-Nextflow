@@ -49,23 +49,24 @@ for og in $file_list; do
                 codes=""$path"emma/cds/${line%/}.rotated"
                 s12=$(rclone cat "$codes".12srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
                 s16=$(rclone cat "$codes".16srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ATP6=$(rclone cat "$codes".ATP6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ATP8=$(rclone cat "$codes".ATP8.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ATP6=$(rclone cat "$codes".ATP6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ATP8=$(rclone cat "$codes".ATP8.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
                 COX1=$(rclone cat "$codes".COX1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                COX2=$(rclone cat "$codes".COX2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                COX3=$(rclone cat "$codes".COX3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                CYTB=$(rclone cat "$codes".CYTB.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND1=$(rclone cat "$codes".ND1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND2=$(rclone cat "$codes".ND2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND3=$(rclone cat "$codes".ND3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND4=$(rclone cat "$codes".ND4.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND4L=$(rclone cat "$codes".ND4L.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND5=$(rclone cat "$codes".ND5.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND6=$(rclone cat "$codes".ND6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #COX2=$(rclone cat "$codes".COX2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #COX3=$(rclone cat "$codes".COX3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #CYTB=$(rclone cat "$codes".CYTB.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND1=$(rclone cat "$codes".ND1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND2=$(rclone cat "$codes".ND2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND3=$(rclone cat "$codes".ND3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND4=$(rclone cat "$codes".ND4.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND4L=$(rclone cat "$codes".ND4L.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND5=$(rclone cat "$codes".ND5.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND6=$(rclone cat "$codes".ND6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
                 
                 # Split up the assmbly name for the database
                 key=$(echo ${line%/} | tr '.' '\t')
-                echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$ATP6\t$ATP8\t$COX1\t$COX2\t$COX3\t$CYTB\t$ND1\t$ND2\t$ND3\t$ND4\t$ND4L\t$ND5\t$ND6" >> mtdnastat."$(date '+%y%m%d')".tsv
+                #echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$ATP6\t$ATP8\t$COX1\t$COX2\t$COX3\t$CYTB\t$ND1\t$ND2\t$ND3\t$ND4\t$ND4L\t$ND5\t$ND6" >> mtdnastat."$(date '+%y%m%d')".tsv
+                echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$COX1" >> mtdnastat."$(date '+%y%m%d')".tsv
             else
             
             
@@ -91,23 +92,24 @@ for og in $file_list; do
                 codes=""$path"emma/cds/${line%/}.rotated"
                 s12=$(rclone cat "$codes".12srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
                 s16=$(rclone cat "$codes".16srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ATP6=$(rclone cat "$codes".ATP6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ATP8=$(rclone cat "$codes".ATP8.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ATP6=$(rclone cat "$codes".ATP6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ATP8=$(rclone cat "$codes".ATP8.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
                 COX1=$(rclone cat "$codes".COX1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                COX2=$(rclone cat "$codes".COX2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                COX3=$(rclone cat "$codes".COX3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                CYTB=$(rclone cat "$codes".CYTB.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND1=$(rclone cat "$codes".ND1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND2=$(rclone cat "$codes".ND2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND3=$(rclone cat "$codes".ND3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND4=$(rclone cat "$codes".ND4.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND4L=$(rclone cat "$codes".ND4L.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND5=$(rclone cat "$codes".ND5.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ND6=$(rclone cat "$codes".ND6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #COX2=$(rclone cat "$codes".COX2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #COX3=$(rclone cat "$codes".COX3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #CYTB=$(rclone cat "$codes".CYTB.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND1=$(rclone cat "$codes".ND1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND2=$(rclone cat "$codes".ND2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND3=$(rclone cat "$codes".ND3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND4=$(rclone cat "$codes".ND4.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND4L=$(rclone cat "$codes".ND4L.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND5=$(rclone cat "$codes".ND5.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
+                #ND6=$(rclone cat "$codes".ND6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
                 
                 # Split up the assmbly name for the database
                 key=$(echo ${line%/} | tr '.' '\t')
-                echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$ATP6\t$ATP8\t$COX1\t$COX2\t$COX3\t$CYTB\t$ND1\t$ND2\t$ND3\t$ND4\t$ND4L\t$ND5\t$ND6" >> mtdnastat."$(date '+%y%m%d')".tsv
+                #echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$ATP6\t$ATP8\t$COX1\t$COX2\t$COX3\t$CYTB\t$ND1\t$ND2\t$ND3\t$ND4\t$ND4L\t$ND5\t$ND6" >> mtdnastat."$(date '+%y%m%d')".tsv
+                echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$COX1" >> mtdnastat."$(date '+%y%m%d')".tsv
         
                     
             fi

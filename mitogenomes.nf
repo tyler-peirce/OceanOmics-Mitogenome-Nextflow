@@ -6,10 +6,10 @@ nextflow.enable.dsl = 2
 // |||| Pipeline input parameters ||||
 //_________________________________________________________________________________________________________
 
-params.rundir = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/OUTPUT_NOVA_241108_AMD" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
+params.rundir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/OG115" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
 params.mitodir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn" // The output parent directory
-
-params.fastq="$params.rundir/OG*/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
+params.fastq="$params.rundir/*/*.{R1,R2}.fastq.gz"
+//params.fastq="$params.rundir/OG*/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
 //params.getorg_db = "/scratch/pawsey0812/tpeirce/.GetOrganelle" // this is now redundant because of the new process, delete if it works fine.
 params.organelle_type = "animal_mt"
 params.lca = "/scratch/pawsey0812/pbayer/OceanGenomes.CuratedNT.NBDLTranche1.CuratedBOLD.fasta" // The curated OG database, curated by Philipp
@@ -281,8 +281,8 @@ params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The
             
             sed -i "s/\$/\\t\$(date +%y%m%d)/" lca/lca.*.tsv
             wait
-            sed -i "s/\$/\\tCO1/" lca/lca.12s*.tsv
-            sed -i "s/\$/\\t16s/" lca/lca.12s*.tsv
+            sed -i "s/\$/\\tCO1/" lca/lca.CO1s*.tsv
+            sed -i "s/\$/\\t16s/" lca/lca.16s*.tsv
             sed -i "s/\$/\\t12s/" lca/lca.12s*.tsv
 
             cat <<-END_VERSIONS > lca/versions_LCA.yml
