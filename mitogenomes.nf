@@ -265,7 +265,7 @@ params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The
             """ 
             version=\$(python -V | sed 's/Python //g')
             
-            env TAXONKIT_DB=$params.taxonkit
+            export TAXONKIT_DB=$params.taxonkit
 
             python /computeLCA.py \\
                 lca/blast.CO1*filtered.tsv \\
