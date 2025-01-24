@@ -1,6 +1,5 @@
 #!/bin/bash
-#!/bin/bash
-#SBATCH -J stats_acacia.slurm
+#SBATCH -J stats_acacia
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --mem=10G
@@ -14,7 +13,7 @@
 # this code pulls all of the stats for the mitogenomes on Acaia
 
 # Create output file
-echo -e "OG_id\ttech\tdate\tcode\tstats\tlength\tlength_emma\tcds\ttrna\trrna\t12s\t16s\tATP6\tATP8\tCOX1\tCOX2\tCOX3\tCYTB\tND1\tND2\tND3\tND4\tND4L\tND5\tND6" >> mtdnastat."$(date '+%y%m%d')".tsv
+echo -e "OG_id\ttech\tdate\tcode\tstats\tlength\tlength_emma\tseqlength_12s\tseqlegth_16s\tseqlength_CO1\tcds_no\ttrna_no\trrna_no\tstatus\tgenbank\trrna12s\trrna16s\tatp6\tatp8\tcox1\tcox2\tcox3\tcytb\tnad1\tnad2\tnad3\tnad4\tnad4l\tnad5\tmad6\ttRNA_Phe\ttRNA_Val\ttRNA_LeuUAG\ttRNA_LeuUAA\ttRNA_Ile\ttRNA_Met\ttRNA_Thr\ttRNA_Pro\ttRNA_Lys\ttRNA_Asp\ttRNA_Glu\ttRNA_SerGCU\ttRNA_SerUGA\ttRNA_Tyr\ttRNA_Cys\ttRNA_Trp\ttRNA_Ala\ttRNA_Asn\ttRNA_Gly\ttRNA_Arg\ttRNA_His\ttRNA_Gln"  > mtdnastat."$(date '+%y%m%d')".tsv
 
 #create list of all the samples that have mitogenomes
 file_list=$(rclone lsf pawsey0812:oceanomics-mitogenomes)
@@ -26,97 +25,111 @@ for og in $file_list; do
     name=$(rclone lsf pawsey0812:oceanomics-mitogenomes/"$og"/)
     echo "name = $name"
 
-    #check if there are any files and if there is more then 1 in the directory
-        if [ $(echo "$name" | wc -l) -ge 1 ]; then
-            echo "$name" | while read -r line; do
-            echo "line = $line"
+    echo "$name" | while read -r line; do
+        echo "line = $line"
 
-            # Pull out the stats of the mitogenome for data assembled through GetOrganelle
-            if [[ $line != *hifi* ]]; then
-                # Details on whether the mitogenome is circular
-                path=pawsey0812:oceanomics-mitogenomes/$og"$line"
-                stats=$(rclone cat "$path"mtdna/get_org.log.txt | grep "Result status of animal_mt: " | tail -n 1 | awk -F 'animal_mt: ' '{print $NF}')
-                
-                # Count the length of the sequence
-                length=$(rclone cat "$path"mtdna/${line%/}.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                length_emma=$(rclone cat "$path"emma/${line%/}.rotated.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                ###need to change this as it doesnt do it for the scaffolds###
-                gff=""$path"emma/${line%/}.rotated.fasta.gff"
-                cds=$(rclone cat $gff | awk '$3 == "CDS" { count++ } END { print count }')
-                trna=$(rclone cat $gff | awk '$3 == "tRNA" { count++ } END { print count }')
-                rrna=$(rclone cat $gff | awk '$3 == "rRNA" { count++ } END { print count }')
+        # Pull out the stats of the mitogenome 
+        if [[ $line == *.hifi.* ]]; then
 
-                codes=""$path"emma/cds/${line%/}.rotated"
-                s12=$(rclone cat "$codes".12srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                s16=$(rclone cat "$codes".16srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ATP6=$(rclone cat "$codes".ATP6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ATP8=$(rclone cat "$codes".ATP8.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                COX1=$(rclone cat "$codes".COX1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #COX2=$(rclone cat "$codes".COX2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #COX3=$(rclone cat "$codes".COX3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #CYTB=$(rclone cat "$codes".CYTB.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND1=$(rclone cat "$codes".ND1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND2=$(rclone cat "$codes".ND2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND3=$(rclone cat "$codes".ND3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND4=$(rclone cat "$codes".ND4.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND4L=$(rclone cat "$codes".ND4L.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND5=$(rclone cat "$codes".ND5.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND6=$(rclone cat "$codes".ND6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                
-                # Split up the assmbly name for the database
-                key=$(echo ${line%/} | tr '.' '\t')
-                #echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$ATP6\t$ATP8\t$COX1\t$COX2\t$COX3\t$CYTB\t$ND1\t$ND2\t$ND3\t$ND4\t$ND4L\t$ND5\t$ND6" >> mtdnastat."$(date '+%y%m%d')".tsv
-                echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$COX1" >> mtdnastat."$(date '+%y%m%d')".tsv
+            # Details on whether the mitogenome is circular if hifi
+            path=pawsey0812:oceanomics-mitogenomes/$og"$line"
+            stats=$(rclone cat "$path"mtdna/contigs_stats.tsv | grep "final_mitogenome" | awk -F "\t" '{print $6}' | tr -d '[:space:]') # Remove whitespace
+            if [ "$stats" = True ]; then
+                stats="circular genome"
             else
-            
-            
-            
-            # Pull out the stats of the mitogenome for hifi data assembled by mitohifi
-                # Details on whether the mitogenome is circular
-                path=pawsey0812:oceanomics-mitogenomes/$og"$line"
-                stats=$(rclone cat "$path"mtdna/contigs_stats.tsv | grep "final_mitogenome" | awk -F "\t" {'print $6'})
-                    if [ "$stats" = True ]; then
-                        stats="circular genome"
-                    else
-                        stats="not circular"
-                    fi
-                # Count the length of the sequence
-                length=$(rclone cat "$path"mtdna/${line%/}.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                length_emma=$(rclone cat "$path"emma/${line%/}.rotated.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                
-                gff=""$path"emma/${line%/}.rotated.fasta.gff"
-                cds=$(rclone cat $gff | awk '$3 == "CDS" { count++ } END { print count }')
-                trna=$(rclone cat $gff | awk '$3 == "tRNA" { count++ } END { print count }')
-                rrna=$(rclone cat $gff | awk '$3 == "rRNA" { count++ } END { print count }')
-
-                codes=""$path"emma/cds/${line%/}.rotated"
-                s12=$(rclone cat "$codes".12srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                s16=$(rclone cat "$codes".16srna.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ATP6=$(rclone cat "$codes".ATP6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ATP8=$(rclone cat "$codes".ATP8.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                COX1=$(rclone cat "$codes".COX1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #COX2=$(rclone cat "$codes".COX2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #COX3=$(rclone cat "$codes".COX3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #CYTB=$(rclone cat "$codes".CYTB.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND1=$(rclone cat "$codes".ND1.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND2=$(rclone cat "$codes".ND2.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND3=$(rclone cat "$codes".ND3.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND4=$(rclone cat "$codes".ND4.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND4L=$(rclone cat "$codes".ND4L.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND5=$(rclone cat "$codes".ND5.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                #ND6=$(rclone cat "$codes".ND6.fasta | grep -v "^>" | tr -d '\n' | awk '{print length}')
-                
-                # Split up the assmbly name for the database
-                key=$(echo ${line%/} | tr '.' '\t')
-                #echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$ATP6\t$ATP8\t$COX1\t$COX2\t$COX3\t$CYTB\t$ND1\t$ND2\t$ND3\t$ND4\t$ND4L\t$ND5\t$ND6" >> mtdnastat."$(date '+%y%m%d')".tsv
-                echo -e "$key\t$stats\t$length\t$length_emma\t$cds\t$trna\t$rrna\t$s12\t$s16\t$COX1" >> mtdnastat."$(date '+%y%m%d')".tsv
+                stats="not circular"
+            fi
         
-                    
+        else
+            # Details on whether the mitogenome is circular if getorg
+            path=pawsey0812:oceanomics-mitogenomes/$og"$line"
+            stats=$(rclone cat "$path"mtdna/ --include "*get_org.log.txt" | grep "Result status of animal_mt: " | tail -n 1 | awk -F 'animal_mt: ' '{print $NF}')
+        fi                
+           
+        # Check if there is a genbank file
+        genbank=$(rclone cat "$path"genbank/ --include "*.{fa,fasta}" | grep ">" | sed 's/>//g')
+
+        # Count the length of the sequence
+        length=$(rclone cat "$path"mtdna/ --include "*.{fa,fasta}" | grep -v "^>" | tr -d '\n' | awk '{print length}')
+        length_emma=$(rclone cat "$path"emma/ --include "*.{fa,fasta}" | grep -v "^>" | tr -d '\n' | awk '{print length}')
+
+        # Count the length of the CO1, 12s and 16s sequences
+        seq_12s=$(rclone cat "$path"emma/cds/ --include "MT-RNR1.*" --include "*12s*" | grep -v "^>" | tr -d '\n' | awk '{print length}')
+        seq_16s=$(rclone cat "$path"emma/cds/ --include "MT-RNR2.*" --include "*16s*" | grep -v "^>" | tr -d '\n' | awk '{print length}')
+        seq_CO1=$(rclone cat "$path"emma/cds/ --include "MT-CO1.*" --include "*COX1*" | grep -v "^>" | tr -d '\n' | awk '{print length}')
+        
+        ###need to change this as it doesnt do it for the scaffolds### check this for scaffolds... maybe there is just no gff
+        gff=""$path"emma/ --include "*.gff""
+        cds_no=$(rclone cat $gff | awk '$3 == "CDS" { count++ } END { print count }') # count the number of cds in mitogenome
+        trna_no=$(rclone cat $gff | awk '$3 == "tRNA" { count++ } END { print count }') # count the number of tRNAs in mitogenome
+        rrna_no=$(rclone cat $gff | awk '$3 == "rRNA" { count++ } END { print count }') # count the number of rRNAs in mitogenome
+
+        # Length of genome feature from gff
+        rrna12s=$(rclone cat $gff | grep -i 12S | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        rrna16s=$(rclone cat $gff | grep -i 16S | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        atp6=$(rclone cat $gff | grep ATP6 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        atp8=$(rclone cat $gff | grep ATP8 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        cox1=$(rclone cat $gff | grep -E "(CO1|COX1)" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        cox2=$(rclone cat $gff | grep -E "(CO2|COX2)" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        cox3=$(rclone cat $gff | grep -E "(CO3|COX3)" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        cytb=$(rclone cat $gff | grep CYTB | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        nad1=$(rclone cat $gff | grep ND1 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        nad2=$(rclone cat $gff | grep ND2 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        nad3=$(rclone cat $gff | grep ND3 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        nad4=$(rclone cat $gff | grep -w "ND4" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        nad4l=$(rclone cat $gff | grep ND4L | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        nad5=$(rclone cat $gff | grep ND5 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        mad6=$(rclone cat $gff | grep ND6 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+
+        tRNA_Phe=$(rclone cat $gff | grep GAA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Val=$(rclone cat $gff | grep UAC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_LeuUAG=$(rclone cat $gff | grep UAG | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Ile=$(rclone cat $gff | grep GAU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Met=$(rclone cat $gff | grep CAU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Thr=$(rclone cat $gff | grep UGU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Pro=$(rclone cat $gff | grep -w UGG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Lys=$(rclone cat $gff | grep UUU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Asp=$(rclone cat $gff | grep GUC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Glu=$(rclone cat $gff | grep UUC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_SerGCU=$(rclone cat $gff | grep GCU | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Tyr=$(rclone cat $gff | grep GUA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Cys=$(rclone cat $gff | grep GCA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Trp=$(rclone cat $gff | grep UCA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Ala=$(rclone cat $gff | grep UGC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Asn=$(rclone cat $gff | grep GUU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_LeuUAA=$(rclone cat $gff | grep UAA | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_SerUGA=$(rclone cat $gff | grep UGA | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Gly=$(rclone cat $gff | grep UCC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Arg=$(rclone cat $gff | grep UCG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_His=$(rclone cat $gff | grep GUG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+        tRNA_Gln=$(rclone cat $gff | grep UUG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") print $5 - $4 + 1}')
+
+        # Test to make sure that all the features are present
+        # Define all variables to check
+        variables=(
+            "$rrna12s" "$rrna16s" "$atp6" "$atp8" "$cox1" "$cox2" "$cox3" "$cytb"
+            "$nad1" "$nad2" "$nad3" "$nad4" "$nad4l" "$nad5" "$mad6"
+            "$tRNA_Phe" "$tRNA_Val" "$tRNA_LeuUAG" "$tRNA_Ile" "$tRNA_Met" "$tRNA_Thr"
+            "$tRNA_Pro" "$tRNA_Lys" "$tRNA_Asp" "$tRNA_Glu" "$tRNA_SerGCU" "$tRNA_Tyr"
+            "$tRNA_Cys" "$tRNA_Trp" "$tRNA_Ala" "$tRNA_Asn" "$tRNA_LeuUAA" "$tRNA_SerUGA"
+            "$tRNA_Gly" "$tRNA_Arg" "$tRNA_His" "$tRNA_Gln"
+        )
+
+        # Initialize status
+        status="all"
+
+        # Check if any variable is missing
+        for var in "${variables[@]}"; do
+            if [ -z "$var" ]; then
+                status="missing"
+                break
             fi
         done
-    else
-        echo "no files for $name"
-        fi
+            
+        # Split up the assmbly name for the database
+        key=$(echo ${line%/} | tr '.' '\t')
+        echo -e "$key\t$stats\t$length\t$length_emma\t$seq_12s\t$seq_16s\t$seq_CO1\t$cds_no\t$trna_no\t$rrna_no\t$status\t$genbank\t$rrna12s\t$rrna16s\t$atp6\t$atp8\t$cox1\t$cox2\t$cox3\t$cytb\t$nad1\t$nad2\t$nad3\t$nad4\t$nad4l\t$nad5\t$mad6\t$tRNA_Phe\t$tRNA_Val\t$tRNA_LeuUAG\t$tRNA_LeuUAA\t$tRNA_Ile\t$tRNA_Met\t$tRNA_Thr\t$tRNA_Pro\t$tRNA_Lys\t$tRNA_Asp\t$tRNA_Glu\t$tRNA_SerGCU\t$tRNA_SerUGA\t$tRNA_Tyr\t$tRNA_Cys\t$tRNA_Trp\t$tRNA_Ala\t$tRNA_Asn\t$tRNA_Gly\t$tRNA_Arg\t$tRNA_His\t$tRNA_Gln" >> mtdnastat."$(date '+%y%m%d')".tsv
+    done
 
 done
 

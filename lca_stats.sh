@@ -1,6 +1,6 @@
 #!/bin/bash
 #!/bin/bash
-#SBATCH -J stats_acacia.slurm
+#SBATCH -J lca_sats.slurm
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --mem=10G
