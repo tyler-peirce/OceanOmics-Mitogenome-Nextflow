@@ -281,7 +281,7 @@ params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The
             
             sed -i "s/\$/\\t\$(date +%y%m%d)/" lca/lca.*.tsv
             wait
-            sed -i "s/\$/\\tCO1/" lca/lca.CO1s*.tsv
+            sed -i "s/\$/\\tCO1/" lca/lca.CO1*.tsv
             sed -i "s/\$/\\t16s/" lca/lca.16s*.tsv
             sed -i "s/\$/\\t12s/" lca/lca.12s*.tsv
 
