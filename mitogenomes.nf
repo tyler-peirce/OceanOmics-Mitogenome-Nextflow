@@ -6,13 +6,13 @@ nextflow.enable.dsl = 2
 // |||| Pipeline input parameters ||||
 //_________________________________________________________________________________________________________
 
-params.rundir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/OG115" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
+params.rundir = "/scratch/pawsey0812/tpeirce/DRAFTGENOME/OUTPUT_NOVA_250131_AD" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
 params.mitodir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ilmn" // The output parent directory
-params.fastq="$params.rundir/*/*.{R1,R2}.fastq.gz"
-//params.fastq="$params.rundir/OG*/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
+//params.fastq="$params.rundir/*/*.{R1,R2}.fastq.gz"
+params.fastq="$params.rundir/OG*/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
 //params.getorg_db = "/scratch/pawsey0812/tpeirce/.GetOrganelle" // this is now redundant because of the new process, delete if it works fine.
 params.organelle_type = "animal_mt"
-params.lca = "/scratch/pawsey0812/pbayer/OceanGenomes.CuratedNT.NBDLTranche1.CuratedBOLD.fasta" // The curated OG database, curated by Philipp
+params.lca = "/scratch/pawsey0812/pbayer/OceanGenomes.CuratedNT.NBDLTranche1and2.CuratedBOLD.fasta*" // The curated OG database, curated by Philipp
 params.taxdb = "/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/*" // The directory that you have "wget ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz" and then "tar xzvf taxdb.tar.gz"
 params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The direcotry that you have "wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" and then "tar xzvf taxdump.tar.gz"
 //params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ACACIA/OG*/OG*/mtdna/OG*.fasta" // For test running Emma process
