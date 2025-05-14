@@ -4,7 +4,7 @@ import os
 import glob
 import numpy as np  # Required for handling infinity values
 
-
+# run using: singularity run $SING/psycopg2:0.1.sif python 04_push_mitogenome_results_to_sqldb.py
 # PostgreSQL connection parameters
 db_params = {
     'dbname': 'oceanomics',
@@ -21,13 +21,16 @@ DATE = "250131"
 
 
 # File containing mitogenome data
-mito_path = "/scratch/pawsey0812/tpeirce/MITOGENOMES/OceanOmics-Mitogenome-Nextflow/mtdnastat.250312.tsv"  # Update this with the correct file path
+mito_path = "/scratch/pawsey0964/tpeirce/_MITOGENOMES/OceanOmics-Mitogenome-Nextflow/mtdnastat.250513.tsv"  # Update this with the correct file path
 
 # Import Mitogenome Data
 print(f"Importing data from {mito_path}")
 
 # Load and preprocess mito data
 mito = pd.read_csv(mito_path, sep="\t")
+
+# Replace NaN with None
+mito = mito.replace({np.nan: None})
 
 # Normalize column names (remove spaces & make lowercase)
 mito.columns = mito.columns.str.strip().str.lower()
@@ -121,8 +124,10 @@ try:
 
         cursor.execute(upsert_query, values)
         row_count += 1  # Increment successful row counter
+
+        print(f"✅ Successfully processed {row_count} rows. Committing changes...")
     
-    print(f"✅ Successfully processed {row_count} rows. Committing changes...")
+    
 
     conn.commit()
     print("Database update complete.")
