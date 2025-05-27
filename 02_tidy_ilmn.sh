@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USER=tpeirce
-RUNDIR=/scratch/pawsey0812/$USER/MITOGENOMES/250131_ilmn
+RUNDIR=/scratch/pawsey0964/$USER/_MITOGENOMES/mitogenomes
 
 for DIR in $RUNDIR/OG*/OG*; do
   echo "$DIR"

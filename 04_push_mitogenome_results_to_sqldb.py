@@ -10,18 +10,16 @@ db_params = {
     'dbname': 'oceanomics',
     'user': 'postgres',
     'password': 'oceanomics',
-    'host': '115.146.85.41',
+    'host': '203.101.227.69',
     'port': 5432
 }
 
 
 # Access file paths
-#DATE = config.get("DATE")
-DATE = "250131"
 
 
 # File containing mitogenome data
-mito_path = "/scratch/pawsey0964/tpeirce/_MITOGENOMES/OceanOmics-Mitogenome-Nextflow/mtdnastat.250513.tsv"  # Update this with the correct file path
+mito_path = "/scratch/pawsey0964/tpeirce/_MITOGENOMES/OceanOmics-Mitogenome-Nextflow/mtdnastat.250521.tsv"  # Update this with the correct file path
 
 # Import Mitogenome Data
 print(f"Importing data from {mito_path}")
