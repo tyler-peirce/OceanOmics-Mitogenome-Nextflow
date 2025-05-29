@@ -16,9 +16,9 @@
 echo -e "OG_id\ttech\tseq_date\tcode\tstats\tlength\tlength_emma\tseqlength_12s\tseqlegth_16s\tseqlength_CO1\tcds_no\ttrna_no\trrna_no\tstatus\tgenbank\trrna12s\trrna16s\tatp6\tatp8\tcox1\tcox2\tcox3\tcytb\tnad1\tnad2\tnad3\tnad4\tnad4l\tnad5\tmad6\ttRNA_Phe\ttRNA_Val\ttRNA_LeuUAG\ttRNA_LeuUAA\ttRNA_Ile\ttRNA_Met\ttRNA_Thr\ttRNA_Pro\ttRNA_Lys\ttRNA_Asp\ttRNA_Glu\ttRNA_SerGCU\ttRNA_SerUGA\ttRNA_Tyr\ttRNA_Cys\ttRNA_Trp\ttRNA_Ala\ttRNA_Asn\ttRNA_Gly\ttRNA_Arg\ttRNA_His\ttRNA_Gln"  > mtdnastat."$(date '+%y%m%d')".tsv
 
 #create list of all the samples that have mitogenomes
-rundir=/scratch/pawsey0812/tpeirce/MITOGENOMES/250131_ilmn
+rundir=/scratch/pawsey0964/tpeirce/_MITOGENOMES/_all_mitogenomes
 
-for og in $rundir/*/*; do
+for og in $rundir/OG*/OG*; do
     echo "og = $og"
 
         # Pull out the stats of the mitogenome 
@@ -56,44 +56,44 @@ for og in $rundir/*/*; do
         rrna_no=$(rclone cat $gff | awk '$3 == "rRNA" { count++ } END { print count }') # count the number of rRNAs in mitogenome
 
         # Length of genome feature from gff
-        rrna12s=$(rclone cat $gff | grep -i 12S | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        rrna16s=$(rclone cat $gff | grep -i 16S | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        atp6=$(rclone cat $gff | grep ATP6 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        atp8=$(rclone cat $gff | grep ATP8 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        cox1=$(rclone cat $gff | grep -E "(CO1|COX1)" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        cox2=$(rclone cat $gff | grep -E "(CO2|COX2)" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        cox3=$(rclone cat $gff | grep -E "(CO3|COX3)" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        cytb=$(rclone cat $gff | grep CYTB | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        nad1=$(rclone cat $gff | grep ND1 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        nad2=$(rclone cat $gff | grep ND2 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        nad3=$(rclone cat $gff | grep ND3 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        nad4=$(rclone cat $gff | grep -w "ND4" | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        nad4l=$(rclone cat $gff | grep ND4L | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        nad5=$(rclone cat $gff | grep ND5 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        mad6=$(rclone cat $gff | grep ND6 | grep CDS | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
+        rrna12s=$(rclone cat $gff | grep -i 12S | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        rrna16s=$(rclone cat $gff | grep -i 16S | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        atp6=$(rclone cat $gff | grep ATP6 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        atp8=$(rclone cat $gff | grep ATP8 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        cox1=$(rclone cat $gff | grep -E "(CO1|COX1)" | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        cox2=$(rclone cat $gff | grep -E "(CO2|COX2)" | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        cox3=$(rclone cat $gff | grep -E "(CO3|COX3)" | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        cytb=$(rclone cat $gff | grep CYTB | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        nad1=$(rclone cat $gff | grep ND1 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        nad2=$(rclone cat $gff | grep ND2 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        nad3=$(rclone cat $gff | grep ND3 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        nad4=$(rclone cat $gff | grep -w "ND4" | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        nad4l=$(rclone cat $gff | grep ND4L | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        nad5=$(rclone cat $gff | grep ND5 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        mad6=$(rclone cat $gff | grep ND6 | grep CDS | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
 
-        tRNA_Phe=$(rclone cat $gff | grep GAA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Val=$(rclone cat $gff | grep UAC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_LeuUAG=$(rclone cat $gff | grep UAG | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Ile=$(rclone cat $gff | grep GAU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Met=$(rclone cat $gff | grep CAU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Thr=$(rclone cat $gff | grep UGU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Pro=$(rclone cat $gff | grep -w UGG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Lys=$(rclone cat $gff | grep UUU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Asp=$(rclone cat $gff | grep GUC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Glu=$(rclone cat $gff | grep UUC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_SerGCU=$(rclone cat $gff | grep GCU | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Tyr=$(rclone cat $gff | grep GUA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Cys=$(rclone cat $gff | grep GCA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Trp=$(rclone cat $gff | grep UCA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Ala=$(rclone cat $gff | grep UGC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Asn=$(rclone cat $gff | grep GUU | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_LeuUAA=$(rclone cat $gff | grep UAA | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_SerUGA=$(rclone cat $gff | grep UGA | grep tRNA | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Gly=$(rclone cat $gff | grep UCC | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Arg=$(rclone cat $gff | grep UCG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_His=$(rclone cat $gff | grep GUG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
-        tRNA_Gln=$(rclone cat $gff | grep UUG | awk -F '\t' 'BEGIN {OFS="\t"} {if ($4 != "" && $5 != "") printf("%s%s", sep, $5 - $4 + 1); sep=","} END {print ""}')
+        tRNA_Phe=$(rclone cat $gff | grep GAA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Val=$(rclone cat $gff | grep UAC | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_LeuUAG=$(rclone cat $gff | grep UAG | grep tRNA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Ile=$(rclone cat $gff | grep GAU | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Met=$(rclone cat $gff | grep CAU | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Thr=$(rclone cat $gff | grep UGU | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Pro=$(rclone cat $gff | grep -w UGG | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Lys=$(rclone cat $gff | grep UUU | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Asp=$(rclone cat $gff | grep GUC | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Glu=$(rclone cat $gff | grep UUC | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_SerGCU=$(rclone cat $gff | grep GCU | grep tRNA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Tyr=$(rclone cat $gff | grep GUA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Cys=$(rclone cat $gff | grep GCA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Trp=$(rclone cat $gff | grep UCA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Ala=$(rclone cat $gff | grep UGC | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Asn=$(rclone cat $gff | grep GUU | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_LeuUAA=$(rclone cat $gff | grep UAA | grep tRNA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_SerUGA=$(rclone cat $gff | grep UGA | grep tRNA | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Gly=$(rclone cat $gff | grep UCC | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Arg=$(rclone cat $gff | grep UCG | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_His=$(rclone cat $gff | grep GUG | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
+        tRNA_Gln=$(rclone cat $gff | grep UUG | awk -F '\t' '$4 != "" && $5 != "" {len = $5 - $4 + 1; if (len > max) max = len} END {print max}')
 
         # Test to make sure that all the features are present
         # Define all variables to check
