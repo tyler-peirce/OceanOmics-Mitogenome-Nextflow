@@ -6,20 +6,17 @@ nextflow.enable.dsl = 2
 // |||| Pipeline input parameters ||||
 //_________________________________________________________________________________________________________
 
-params.date = "230324" 
-params.rundir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/missing/230324" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
-params.mitodir = "/scratch/pawsey0812/tpeirce/MITOGENOMES/${params.date}_ilmn" // The output parent directory
-//params.fastq="$params.rundir/*/*.{R1,R2}.fastq.gz"
-params.fastq="$params.rundir/OG*/fastp/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
-//params.getorg_db = "/scratch/pawsey0812/tpeirce/.GetOrganelle" // this is now redundant because of the new process, delete if it works fine.
+params.run = "NOVA_000000_AA" // this is what for what you want the directory for your output to be called
+params.rundir = "/scratch/pawsey0964/tpeirce/_MITOGENOMES" // Put the path to the parent directory for the OG dirs to follow file path for params.fastq
+params.mitodir = "$params.rundir/$params.run" // The output parent directory
+params.fastq="$params.rundir/fastq/OG*/*.{R1,R2}.fastq.gz" // this is the location to where you have stored the fastq files
+// params.fastq="$params.rundir/fastp/OG*/*.{R1,R2}.fastq.gz" // This is connected to the Draft Genome pipeline output dir
 params.organelle_type = "animal_mt"
-params.lca = "/scratch/pawsey0812/pbayer/OceanGenomes.CuratedNT.NBDLTranche1and2.CuratedBOLD.fasta" // The curated OG database, curated by Philipp
-params.taxdb = "/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/*" // The directory that you have "wget ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz" and then "tar xzvf taxdb.tar.gz"
-params.taxonkit="/scratch/pawsey0812/tpeirce/MITOGENOMES/blast_database/" // The direcotry that you have "wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" and then "tar xzvf taxdump.tar.gz"
-params.cdsscript=
-params.proteinscript=
-//params.EMMA = "/scratch/pawsey0812/tpeirce/MITOGENOMES/ACACIA/OG*/OG*/mtdna/OG*.fasta" // For test running Emma process
-params.EMMA = "OG4*_mancurated.fa"
+params.lca = "/scratch/pawsey0964/pbayer/OceanGenomes.CuratedNT.NBDLTranche1and2.CuratedBOLD.fasta" // The curated OG database, curated by Philipp
+params.taxdb = "$params.rundir/blast_database/*" // The directory that you have "wget ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz" and then "tar xzvf taxdb.tar.gz"
+params.taxonkit="$params.rundir/blast_database/" // The direcotry that you have "wget ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" and then "tar xzvf taxdump.tar.gz"
+//params.EMMA = "/scratch/pawsey0964/tpeirce/MITOGENOMES/ACACIA/OG*/OG*/mtdna/OG*.fasta" // For test running Emma process
+params.EMMA = "$params.mitodir/*/*/mtdna/OG*.fasta"
 //params.annotation = "${params.mitodir}/OG*/*/mtdna/*1.1*.fasta" // This params is to be used when you dont need to do the assembly
 //_________________________________________________________________________________________________________
 // |||| Processes ||||
@@ -309,36 +306,36 @@ workflow {
     // Comment this section out to the solid lines if you just want to run the annotation and LCA.
     //_________________________________________________________________________________________________________________
 
-       organelle_ch = params.organelle_type
+    //    organelle_ch = params.organelle_type
 
-       GETORGANELLE_CONFIG(organelle_ch)
+    //    GETORGANELLE_CONFIG(organelle_ch)
                 
-       read_pairs_ch = Channel
-           .fromFilePairs(params.fastq, checkIfExists: true)
-           .map { pair ->
-               def tokens = pair[0].tokenize('.')
-               def og_num = tokens[0]              // Get the first token (og_num)
-               def sample = tokens.take(3).join('.') // Join the first 3 tokens to form the sample name
-               return tuple(og_num, sample, pair[1]) 
-           }
-       read_pairs_ch.subscribe { item -> println "read_pairs_ch: $item"}
+    //    read_pairs_ch = Channel
+    //        .fromFilePairs(params.fastq, checkIfExists: true)
+    //        .map { pair ->
+    //            def tokens = pair[0].tokenize('.')
+    //            def og_num = tokens[0]              // Get the first token (og_num)
+    //            def sample = tokens.take(3).join('.') // Join the first 3 tokens to form the sample name
+    //            return tuple(og_num, sample, pair[1]) 
+    //        }
+    //    read_pairs_ch.subscribe { item -> println "read_pairs_ch: $item"}
         
 
-       GETORGANELLE_FROMREADS(read_pairs_ch, GETORGANELLE_CONFIG.out.db)
+    //    GETORGANELLE_FROMREADS(read_pairs_ch, GETORGANELLE_CONFIG.out.db)
         
-       prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
-           .map {
-                // Use the baseName method to extract the filename without the directo
-                def fileName = it.getFileName().toString()
-                // Extract the first token (e.g., "OG33")
-                def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
-                // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
-                def prefix = fileName.tokenize('.').take(4).join('.')
-                return tuple(og_num, prefix, it) 
-            }
-        prefix_ch.subscribe { item -> println "prefix_ch: $item"}
+    //    prefix_ch = GETORGANELLE_FROMREADS.out.fasta  // Change to Channel.fromPath(params.annotation) if you already have the assemblies and "//" out everything above this channel in the workflow
+    //        .map {
+    //             // Use the baseName method to extract the filename without the directo
+    //             def fileName = it.getFileName().toString()
+    //             // Extract the first token (e.g., "OG33")
+    //             def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
+    //             // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
+    //             def prefix = fileName.tokenize('.').take(4).join('.')
+    //             return tuple(og_num, prefix, it) 
+    //         }
+    //     prefix_ch.subscribe { item -> println "prefix_ch: $item"}
         
-        EMMA(prefix_ch)
+    //     EMMA(prefix_ch)
 
     //_________________________________________________________________________________________________________________
     // Comment out to here to just run the annotation and LCA.
@@ -346,23 +343,23 @@ workflow {
     // The next section needs to be commented out to run the whole pipeline. Until the next solid line
     //_________________________________________________________________________________________________________________
 
-    //    // Comment out everything above to just run the nextflow from EMMA and uncomment out this section
-    //    emma_ch = Channel
-    //        .fromPath(params.EMMA, checkIfExists: true)
-    //        .map {
-    //             // Use the baseName method to extract the filename without the directo
-    //            def fileName = it.getFileName().toString()
-    //             // Extract the first token (e.g., "OG33")
-    //            def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
-    //             // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
-    //            def prefix = fileName.tokenize('.').take(4).join('.')
-    //            return tuple(og_num, prefix, it) 
-    //        }   
-    //     emma_ch.subscribe { item -> println "emma_ch: $item"}  // Uncomment if you want to check the channel output
+       // Comment out everything above to just run the nextflow from EMMA and uncomment out this section
+       emma_ch = Channel
+           .fromPath(params.EMMA, checkIfExists: true)
+           .map {
+                // Use the baseName method to extract the filename without the directo
+               def fileName = it.getFileName().toString()
+                // Extract the first token (e.g., "OG33")
+               def og_num = fileName.tokenize('.')[0] // the [0] takes the first element of the list thats created and provides just the value
+                // Extract the first four tokens and join them (e.g., "OG33.ilmn.240716.getorg1770")
+               def prefix = fileName.tokenize('.').take(4).join('.')
+               return tuple(og_num, prefix, it) 
+           }   
+        emma_ch.subscribe { item -> println "emma_ch: $item"}  // Uncomment if you want to check the channel output
         
-    //    EMMA(emma_ch)
+       EMMA(emma_ch)
 
-    //     EMMA.out.blast.subscribe { item -> println "Output from EMMA: $item" } // Uncomment if you want to check the channel output
+        EMMA.out.blast.subscribe { item -> println "Output from EMMA: $item" } // Uncomment if you want to check the channel output
     
     //_________________________________________________________________________________________________________________
     // This remaining section remains uncommented for either workflow.
